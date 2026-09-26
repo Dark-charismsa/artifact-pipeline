@@ -24,4 +24,9 @@ unsigned, vulnerable, or unattested, and automated metrics deciding promote vs. 
 
 ## Status
 
-Phase 1 (cluster + Argo CD) not started yet.
+Phases 1-3 done. Phase 4 (Argo Rollouts + Prometheus) is next.
+
+Phase 3 known issues:
+
+- The `kyverno` Argo CD app shows OutOfSync on 11 `policies.kyverno.io` CRDs while Healthy. Cosmetic; `ignoreDifferences`, chart-value labels and `ServerSideDiff` did not clear it.
+- The `critical == 0` and provenance source-repo checks have only been shown to pass. Still to prove they can reject (for example by temporarily requiring `high == 0`).
