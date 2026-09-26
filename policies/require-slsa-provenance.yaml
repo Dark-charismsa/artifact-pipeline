@@ -1,0 +1,39 @@
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+metadata:
+  name: require-slsa-provenance
+spec:
+  validationActions: [Deny]
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: false
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+        operations: ["CREATE", "UPDATE"]
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: default
+  matchImageReferences:
+    - glob: "*"
+  attestors:
+    - name: slsa
+      cosign:
+        keyless:
+          identities:
+            - issuer: https://token.actions.githubusercontent.com
+              subject: https://github.com/slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@refs/tags/v2.1.0
+  attestations:
+    - name: provenance
+      intoto:
+        type: https://slsa.dev/provenance/v0.2
+  validations:
+    - expression: >-
+        images.containers.map(image, verifyAttestationSignatures(image, attestations.provenance, [attestors.slsa])).all(e, e > 0)
+      message: Image must have SLSA provenance signed by the slsa-github-generator workflow
+    - expression: >-
+        images.containers.all(image, extractPayload(image, attestations.provenance).predicate.invocation.configSource.uri == 'git+https://github.com/Dark-charismsa/artifact-pipeline@refs/heads/main')
+      message: Provenance must show the image was built from the main branch of Dark-charismsa/artifact-pipeline
