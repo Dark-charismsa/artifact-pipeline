@@ -58,6 +58,32 @@ jobs:
       - name: Sign image keylessly
         run: cosign sign --yes ${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
 
+      - name: Attach SBOM to image
+        run: |
+          cosign attest --yes --type spdxjson \
+            --predicate sbom.spdx.json \
+            ${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+
+      - name: Scan SBOM for vulnerabilities
+        id: scan
+        uses: anchore/scan-action@v6
+        with:
+          sbom: sbom.spdx.json
+          fail-build: false
+          output-format: json
+
+      - name: Attest vulnerability summary
+        run: |
+          jq '{
+            critical: ([.matches[] | select(.vulnerability.severity == "Critical")] | length),
+            high: ([.matches[] | select(.vulnerability.severity == "High")] | length)
+          }' ${{ steps.scan.outputs.json }} > vuln-summary.json
+          cat vuln-summary.json
+          cosign attest --yes \
+            --type https://github.com/Dark-charismsa/artifact-pipeline/vuln-summary/v1 \
+            --predicate vuln-summary.json \
+            ${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+
   provenance:
     needs: [build]
     permissions:
