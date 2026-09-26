@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: ghcr.io/dark-charismsa/artifact-pipeline@sha256:11d69ed05416858921c261b3c025ef645c286b59d9e6a6d437978d0c8c8a6e23
+          image: ghcr.io/dark-charismsa/artifact-pipeline@sha256:a2a6728aa72337fbfe1a891e23cdcb353583c234a32747856f4972cbc829cc44
           ports:
             - containerPort: 80

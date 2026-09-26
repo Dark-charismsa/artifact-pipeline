@@ -1,0 +1,39 @@
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+metadata:
+  name: block-critical-vulnerabilities
+spec:
+  validationActions: [Deny]
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: false
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+        operations: ["CREATE", "UPDATE"]
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: default
+  matchImageReferences:
+    - glob: "*"
+  attestors:
+    - name: github
+      cosign:
+        keyless:
+          identities:
+            - issuer: https://token.actions.githubusercontent.com
+              subjectRegExp: ^https://github\.com/Dark-charismsa/artifact-pipeline/\.github/workflows/build\.yml@.*$
+  attestations:
+    - name: vulns
+      intoto:
+        type: https://github.com/Dark-charismsa/artifact-pipeline/vuln-summary/v1
+  validations:
+    - expression: >-
+        images.containers.map(image, verifyAttestationSignatures(image, attestations.vulns, [attestors.github])).all(e, e > 0)
+      message: Image must have a vulnerability summary attestation signed by the build workflow
+    - expression: >-
+        images.containers.all(image, extractPayload(image, attestations.vulns).predicate.critical == 0)
+      message: Image has critical vulnerabilities
