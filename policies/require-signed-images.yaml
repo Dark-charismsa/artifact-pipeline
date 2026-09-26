@@ -1,0 +1,32 @@
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+metadata:
+  name: require-signed-images
+spec:
+  validationActions: [Deny]
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: false
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+        operations: ["CREATE", "UPDATE"]
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: default
+  matchImageReferences:
+    - glob: "*"
+  attestors:
+    - name: github
+      cosign:
+        keyless:
+          identities:
+            - issuer: https://token.actions.githubusercontent.com
+              subjectRegExp: ^https://github\.com/Dark-charismsa/artifact-pipeline/\.github/workflows/build\.yml@.*$
+  validations:
+    - expression: >-
+        images.containers.map(image, verifyImageSignatures(image, [attestors.github])).all(e, e > 0)
+      message: Image must be signed by the artifact-pipeline build workflow
