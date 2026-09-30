@@ -1,0 +1,21 @@
+# Queried by the Rollout during a canary pause. Each run takes 4 samples,
+# 15s apart, from Prometheus. If 2 of those samples show an error rate at or
+# above 5%, the run fails and Argo Rollouts aborts the rollout automatically.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: hello-error-rate
+spec:
+  metrics:
+    - name: error-rate
+      interval: 15s
+      count: 4
+      failureLimit: 1
+      successCondition: result < 0.05
+      provider:
+        prometheus:
+          address: http://prometheus-server.monitoring.svc.cluster.local
+          query: |
+            sum(rate(http_requests_total{namespace="default",code=~"5.."}[1m]))
+            /
+            sum(rate(http_requests_total{namespace="default"}[1m]))

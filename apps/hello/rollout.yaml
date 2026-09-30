@@ -1,5 +1,8 @@
-apiVersion: apps/v1
-kind: Deployment
+# Replaces the Deployment. Same pod template; a different controller
+# (Argo Rollouts, not the built-in Deployment controller) drives it, and
+# updates roll out through canary steps instead of all at once.
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: hello-deploy
 spec:
@@ -33,3 +36,14 @@ spec:
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
+  strategy:
+    canary:
+      steps:
+        - setWeight: 20
+        - pause: { duration: 30s }
+        - analysis:
+            templates:
+              - templateName: hello-error-rate
+        - setWeight: 60
+        - pause: { duration: 30s }
+        - setWeight: 100
