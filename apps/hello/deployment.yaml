@@ -11,9 +11,25 @@ spec:
     metadata:
       labels:
         app: hello
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
-        - name: nginx
-          image: ghcr.io/dark-charismsa/artifact-pipeline@sha256:a2a6728aa72337fbfe1a891e23cdcb353583c234a32747856f4972cbc829cc44
+        - name: app
+          image: ghcr.io/dark-charismsa/artifact-pipeline@sha256:b994838530c9673f40106610f5a46cbb888447c37089aa2388da54e376a2fd9a
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
