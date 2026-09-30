@@ -11,6 +11,12 @@ spec:
     targetRevision: 29.33.1
     helm:
       valuesObject:
+        server:
+          global:
+            scrape_interval: 15s
+            scrape_timeout: 10s
+          persistentVolume:
+            enabled: false
         alertmanager:
           enabled: false
         prometheus-pushgateway:
@@ -19,9 +25,6 @@ spec:
           enabled: false
         kube-state-metrics:
           enabled: false
-        server:
-          persistentVolume:
-            enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
