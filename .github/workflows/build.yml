@@ -38,6 +38,7 @@ jobs:
           context: ./app
           push: true
           tags: ${{ env.IMAGE_NAME }}:latest
+          build-args: VERSION=${{ github.sha }}
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0
