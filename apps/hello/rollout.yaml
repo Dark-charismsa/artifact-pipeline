@@ -24,7 +24,7 @@ spec:
           image: ghcr.io/dark-charismsa/artifact-pipeline@sha256:b994838530c9673f40106610f5a46cbb888447c37089aa2388da54e376a2fd9a
           env:
             - name: LATENCY_MS
-              value: "45"
+              value: "50"
           ports:
             - containerPort: 8080
           readinessProbe:
@@ -47,6 +47,10 @@ spec:
         - analysis:
             templates:
               - templateName: hello-error-rate
+                args:
+                  - name: canary-hash
+                    valueFrom:
+                      podTemplateHashValue: Latest
         - setWeight: 60
         - pause: { duration: 30s }
         - setWeight: 100
