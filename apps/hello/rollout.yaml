@@ -47,10 +47,10 @@ spec:
         - analysis:
             templates:
               - templateName: hello-error-rate
-                args:
-                  - name: canary-hash
-                    valueFrom:
-                      podTemplateHashValue: Latest
+            args:
+              - name: canary-hash
+                valueFrom:
+                  podTemplateHashValue: Latest
         - setWeight: 60
         - pause: { duration: 30s }
         - setWeight: 100
