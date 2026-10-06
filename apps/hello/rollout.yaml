@@ -25,6 +25,8 @@ spec:
           env:
             - name: LATENCY_MS
               value: "50"
+            - name: ERROR_RATE
+              value: "1.0"
           ports:
             - containerPort: 8080
           readinessProbe:
