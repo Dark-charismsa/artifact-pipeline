@@ -24,9 +24,15 @@ unsigned, vulnerable, or unattested, and automated metrics deciding promote vs. 
 
 ## Status
 
-Phases 1-3 done. Phase 4 (Argo Rollouts + Prometheus) is next.
+Phases 1-4 done. Phase 5 (tie it together + chaos test) is next.
 
 Phase 3 known issues:
 
 - The `kyverno` Argo CD app shows OutOfSync on 11 `policies.kyverno.io` CRDs while Healthy. Cosmetic; `ignoreDifferences`, chart-value labels and `ServerSideDiff` did not clear it.
 - The `critical == 0` and provenance source-repo checks have only been shown to pass. Still to prove they can reject (for example by temporarily requiring `high == 0`).
+
+Phase 4 known issues:
+
+- The canary analysis query must be scoped to the canary's own pods (via the `rollouts-pod-template-hash` label) rather than the whole namespace. A pooled query lets stable-pod traffic dilute a broken canary's error rate, and a broken stable version can block every future canary from passing.
+- Prometheus vector results reach Argo's `successCondition` as a slice (`result[0]`, not `result`), and an empty vector needs `or vector(0)` so a zero-error window doesn't read as "no data".
+- One canary pod failed its readiness probe once during testing (`connection refused`) and never received traffic, which produced a "no data" analysis error. It did not reproduce on retry; the cause is unconfirmed.
